@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CampusCue: Smart College Notice &amp; Deadline Assistant</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#0b1220;--card:#121c33;--card2:#18264a;--line:#26365f;--tx:#e8edf8;--mut:#9fadcc;--pri:#6d4df0;--cy:#4fd6ea;--ok:#3ddc97;--warn:#f5b04a;--bad:#ff7b7b}
+*{box-sizing:border-box}html{color-scheme:dark}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 Manrope,system-ui,"Segoe UI",Roboto,sans-serif;overflow-wrap:anywhere}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:8px 0 18px}
+.brand{display:flex;gap:12px;align-items:center}.logo{width:44px;height:44px;border-radius:12px;background:var(--pri);display:grid;place-items:center}
+h1{font-size:1.4rem;margin:0;font-weight:800}h2{font-size:1.1rem;margin:0 0 6px}h3{font-size:1rem;margin:0}
+.sub,.mut{color:var(--mut)}.sub{margin:0;font-size:.85rem}.small{font-size:.85rem}
+.grid{display:grid;gap:12px}.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.card,.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stat b{display:block;font-size:1.9rem;line-height:1.2}.stat span{color:var(--mut);font-size:.82rem}
+.prog{grid-column:1/-1}.bar{height:10px;background:#0b1530;border-radius:99px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;width:0;background:var(--cy);transition:width .4s}
+.panel.x{border-left:4px solid var(--pri);margin-top:12px}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer}.btn:hover{border-color:var(--cy)}
+.btn.p{background:var(--pri);border-color:var(--pri);font-weight:600}.btn.p:hover{background:#5b3be0}.btn.d{color:var(--bad)}.btn:disabled{opacity:.6;cursor:wait}
+:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+input,select,textarea{width:100%;background:#0b1530;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+textarea{resize:vertical;min-height:110px}label{display:block;font-size:.82rem;color:var(--mut);margin:10px 0 4px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.sp{justify-content:space-between}
+.tools{grid-template-columns:2fr 1fr 1fr;margin:16px 0 8px}.chips{margin-bottom:12px}
+.chips button[aria-pressed=true]{background:var(--pri);border-color:var(--pri)}
+.list{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}.item{border-left:4px solid var(--line);align-content:start}
+.st-overdue{border-left-color:var(--bad)}.st-today{border-left-color:var(--warn)}.st-upcoming{border-left-color:var(--cy)}.st-done{border-left-color:var(--ok)}
+.badge{font-size:.74rem;padding:1px 9px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.b-upcoming{color:var(--cy)}.b-today{color:var(--warn)}.b-overdue{color:var(--bad)}.b-done{color:var(--ok)}.b-nodate{color:var(--mut)}
+.cat{font-size:.8rem;color:var(--cy);font-weight:600}
+dialog{width:min(660px,94vw);max-height:92vh;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:16px;padding:18px}dialog::backdrop{background:#000b}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.warn{background:#251f0f;border:1px solid #6b5316;border-radius:10px;padding:8px 12px;font-size:.85rem;margin-top:8px}.warn ul{margin:4px 0 0 18px;padding:0}
+footer{color:var(--mut);font-size:.8rem;margin:24px 0 8px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--cy);border-radius:10px;padding:10px 16px;opacity:0;pointer-events:none;max-width:92vw;transition:opacity .2s}
+#toast.show{opacity:1}#toast.err{border-color:var(--bad)}
+@media(max-width:640px){.tools,.two{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><div class="wrap">
+<header>
+ <div class="brand"><div class="logo" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></div>
+ <div><h1>CampusCue</h1><p class="sub">Smart College Notice &amp; Deadline Assistant</p></div></div>
+ <div class="row"><button class="btn" id="demoOn">Load demo notices</button><button class="btn" id="demoOff">Remove demo notices</button></div>
+</header>
+<main>
+<section class="grid stats" aria-label="Summary">
+ <div class="card stat"><b id="sA">0</b><span>Active notices</span></div>
+ <div class="card stat"><b id="sU">0</b><span>Upcoming or due today</span></div>
+ <div class="card stat"><b id="sO">0</b><span>Overdue</span></div>
+ <div class="card stat"><b id="sD">0</b><span>Completed</span></div>
+ <div class="card prog"><div class="row sp"><b>Overall progress</b><b id="pct">0%</b></div>
+  <div class="bar" id="bar" role="progressbar" aria-label="Completed notices" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="fill"></i></div>
+  <div class="small mut">Next deadline: <span id="next" style="color:var(--tx)">None</span></div></div>
+</section>
+<section class="panel x" aria-labelledby="xh">
+ <h2 id="xh">Paste Notice &amp; Extract with AI</h2>
+ <p class="small mut" style="margin:0">Paste a college announcement. You review every extracted field before anything is saved.</p>
+ <label for="raw">Notice text</label>
+ <textarea id="raw" maxlength="8000" placeholder="Paste the full notice here (30 to 8000 characters)"></textarea>
+ <div class="row" style="margin-top:10px"><button class="btn p" id="ex">Extract details</button><button class="btn" id="addM">Add manually</button>
+  <span class="small mut">Fictional samples:</span><button class="btn" data-s="0">Scholarship</button><button class="btn" data-s="1">Exam</button><button class="btn" data-s="2">Placement</button></div>
+</section>
+<section class="grid tools" aria-label="Search and filters">
+ <div><label for="q" class="small">Search notices</label><input id="q" type="search" placeholder="Title, description, actions, original text"></div>
+ <div><label for="cat">Category</label><select id="cat"><option value="">All categories</option></select></div>
+ <div><label for="sort">Sort by</label><select id="sort"><option value="deadline">Nearest deadline</option><option value="recent">Recently added</option></select></div>
+</section>
+<div class="row chips" id="chips" role="group" aria-label="Filter by status">
+ <button class="btn" data-st="all" aria-pressed="true">All</button><button class="btn" data-st="upcoming" aria-pressed="false">Upcoming</button><button class="btn" data-st="today" aria-pressed="false">Due today</button><button class="btn" data-st="overdue" aria-pressed="false">Overdue</button><button class="btn" data-st="done" aria-pressed="false">Completed</button>
+</div>
+<section class="grid list" id="list" aria-live="polite"></section>
+</main>
+<footer>Notices are stored only in this browser (localStorage) and do not sync between devices. If AI extraction is configured on the server, the pasted notice text is sent to that server and its AI provider; nothing else is sent.</footer>
+</div>
+
+<dialog id="dlg" aria-labelledby="dt"><form id="f">
+ <h2 id="dt">Add notice</h2><div class="warn" id="info" hidden></div>
+ <label for="f_title">Title (required)</label><input id="f_title" required maxlength="140">
+ <div class="two"><div><label for="f_category">Category</label><select id="f_category"></select></div>
+  <div><label for="f_deadline">Deadline (last date to act)</label><input id="f_deadline" type="date"></div></div>
+ <div class="two"><div><label for="f_eventDate">Event or exam date (not a deadline)</label><input id="f_eventDate" type="date"></div>
+  <div><label for="f_eligibility">Eligibility</label><input id="f_eligibility" maxlength="500"></div></div>
+ <label for="f_description">Description</label><textarea id="f_description" style="min-height:60px" maxlength="2000"></textarea>
+ <div class="two"><div><label for="f_actions">Required actions (one per line)</label><textarea id="f_actions" style="min-height:70px"></textarea></div>
+  <div><label for="f_documents">Documents (one per line)</label><textarea id="f_documents" style="min-height:70px"></textarea></div></div>
+ <label for="f_source">Original notice text (kept for verification)</label><textarea id="f_source" maxlength="8000"></textarea>
+ <div class="row" style="margin-top:14px;justify-content:flex-end"><button type="button" class="btn" id="cancel">Cancel</button><button class="btn p" type="submit">Save notice</button></div>
+</form></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const CATS=['Exams','Assignments','Scholarships','Events','Admissions','Placements','Administration','Other'];
+const KEY='campusalert.v1',LBL={upcoming:'Upcoming',today:'Due today',overdue:'Overdue',done:'Completed',nodate:'No deadline'};
+let notices=[],F={q:'',cat:'',st:'all',sort:'deadline'},editId=null,editDone=false,tt;
+const $=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0'),uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parts=s=>s.split('-').map(Number);
+function valid(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return false;const[y,m,d]=parts(s),t=new Date(y,m-1,d);return t.getFullYear()===y&&t.getMonth()===m-1&&t.getDate()===d}
+function daysTo(s){const[y,m,d]=parts(s),n=new Date();return Math.round((new Date(y,m-1,d)-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/864e5)}
+const fd=s=>{if(!valid(s))return'none';const[y,m,d]=parts(s);return new Date(y,m-1,d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})};
+// Status is always computed from the deadline and today's local date, never stored.
+function status(n){if(n.completed)return'done';if(!n.deadline)return'nodate';const d=daysTo(n.deadline);return d<0?'overdue':d===0?'today':'upcoming'}
+const rel=n=>{const d=daysTo(n.deadline);return d<0?`${-d} day${d<-1?'s':''} overdue`:d===0?'due today':`in ${d} day${d>1?'s':''}`};
+const list=v=>Array.isArray(v)?v.map(x=>String(x).trim()).filter(Boolean).slice(0,20):[];
+function clean(n){if(!n||typeof n.title!=='string'||!n.title.trim())return null;
+ return{id:String(n.id||uid()),title:n.title.trim().slice(0,140),category:CATS.includes(n.category)?n.category:'Other',deadline:valid(n.deadline)?n.deadline:'',eventDate:valid(n.eventDate)?n.eventDate:'',description:String(n.description||'').slice(0,2000),actions:list(n.actions),documents:list(n.documents),eligibility:String(n.eligibility||'').slice(0,500),source:String(n.source||'').slice(0,8000),completed:!!n.completed,demo:!!n.demo,created:Number(n.created)||Date.now()}}
+function toast(m,t){const e=$('#toast');e.textContent=m;e.className=t==='err'?'show err':'show';clearTimeout(tt);tt=setTimeout(()=>e.className='',4000)}
+function load(){try{const raw=localStorage.getItem(KEY);if(!raw)return[];const a=JSON.parse(raw);if(!Array.isArray(a))throw 0;return a.map(clean).filter(Boolean)}
+ catch(e){try{localStorage.setItem(KEY+'.corrupt',localStorage.getItem(KEY))}catch{}toast('Saved data was unreadable. A backup was kept and the list starts empty.','err');return[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(notices))}catch{toast('Could not save: browser storage is full or blocked.','err')}}
+
+function render(){
+ const A=notices.filter(n=>!n.completed),done=notices.length-A.length,pct=notices.length?Math.round(done/notices.length*100):0;
+ $('#sA').textContent=A.length;$('#sU').textContent=A.filter(n=>['upcoming','today'].includes(status(n))).length;
+ $('#sO').textContent=A.filter(n=>status(n)==='overdue').length;$('#sD').textContent=done;
+ $('#pct').textContent=pct+'%';$('#fill').style.width=pct+'%';$('#bar').setAttribute('aria-valuenow',pct);
+ const nx=A.filter(n=>n.deadline&&daysTo(n.deadline)>=0).sort((a,b)=>a.deadline<b.deadline?-1:1)[0];
+ $('#next').textContent=nx?`${nx.title}, ${fd(nx.deadline)} (${rel(nx)})`:'None';
+ const rank=n=>n.completed?2:n.deadline?0:1;
+ const L=notices.filter(n=>(!F.cat||n.category===F.cat)&&(F.st==='all'||status(n)===F.st)&&(!F.q||[n.title,n.description,n.source,n.eligibility,...n.actions,...n.documents].join(' ').toLowerCase().includes(F.q)));
+ L.sort(F.sort==='recent'?(a,b)=>b.created-a.created:(a,b)=>rank(a)-rank(b)||(a.deadline<b.deadline?-1:a.deadline>b.deadline?1:0)||b.created-a.created);
+ $('#list').innerHTML=L.length?L.map(n=>{const s=status(n),id=esc(n.id);
+  return`<article class="card item grid st-${s}"><div class="row sp"><span class="cat">${esc(n.category)}</span><span class="row" style="gap:4px"><span class="badge b-${s}">${LBL[s]}</span>${n.demo?'<span class="badge b-nodate">Demo</span>':''}</span></div>
+  <h3>${esc(n.title)}</h3>
+  <div class="mut small">${n.deadline?`Deadline: <b style="color:var(--tx)">${fd(n.deadline)}</b>${s==='done'?'':' ('+rel(n)+')'}`:'No deadline set'}${n.eventDate?`<br>Event date: ${fd(n.eventDate)}`:''}</div>
+  ${n.description?`<p class="small" style="margin:0">${esc(n.description.slice(0,140))}${n.description.length>140?'...':''}</p>`:''}
+  <div class="mut small">${n.actions.length} action(s), ${n.documents.length} document(s)${n.source?', original text saved':''}</div>
+  <div class="row"><button class="btn" data-a="open" data-id="${id}">Open / Edit</button><button class="btn" data-a="tog" data-id="${id}">${n.completed?'Reopen':'Mark complete'}</button><button class="btn d" data-a="del" data-id="${id}">Delete</button></div></article>`}).join('')
+  :`<div class="card" style="grid-column:1/-1"><b>${notices.length?'No notices match these filters.':'No notices yet.'}</b><p class="mut small" style="margin:4px 0 0">${notices.length?'Clear the search or choose a different category or status.':'Paste an announcement above, add one manually, or load the demo notices.'}</p></div>`}
+
+function openDlg(n,mode,warns=[]){
+ editId=n&&n.id||null;editDone=!!(n&&n.completed);const d=n||{};
+ ['title','deadline','eventDate','description','eligibility','source'].forEach(k=>$('#f_'+k).value=d[k]||'');
+ $('#f_category').value=d.category||'Other';$('#f_actions').value=(d.actions||[]).join('\n');$('#f_documents').value=(d.documents||[]).join('\n');
+ $('#dt').textContent=editId?'Edit notice':mode?'Review extracted notice':'Add notice';
+ const i=$('#info');i.hidden=!mode;if(mode)i.innerHTML=`<b>${esc(mode)}</b>`+(warns.length?`<ul>${warns.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:'');
+ $('#dlg').showModal();$('#f_title').focus()}
+$('#cancel').onclick=()=>$('#dlg').close();
+$('#f').onsubmit=e=>{e.preventDefault();const g=k=>$('#f_'+k).value.trim(),old=notices.find(x=>x.id===editId);
+ const o=clean({id:editId||uid(),title:g('title'),category:g('category'),deadline:g('deadline'),eventDate:g('eventDate'),description:g('description'),actions:g('actions').split('\n'),documents:g('documents').split('\n'),eligibility:g('eligibility'),source:$('#f_source').value,completed:editDone,demo:!!(old&&old.demo),created:old&&old.created});
+ if(!o)return toast('Title is required.','err');
+ if(!old&&notices.some(x=>x.title.toLowerCase()===o.title.toLowerCase()&&x.deadline===o.deadline)&&!confirm('A notice with the same title and deadline already exists. Save another copy?'))return;
+ if(old)notices[notices.indexOf(old)]=o;else notices.push(o);
+ save();render();$('#dlg').close();toast(old?'Notice updated.':'Notice saved.')};
+$('#list').onclick=e=>{const b=e.target.closest('button'),n=b&&notices.find(x=>x.id===b.dataset.id);if(!n)return;
+ if(b.dataset.a==='open')openDlg(n);
+ if(b.dataset.a==='tog'){n.completed=!n.completed;save();render();toast(n.completed?'Marked complete.':'Notice reopened.')}
+ if(b.dataset.a==='del'&&confirm(`Delete "${n.title}"? This cannot be undone.`)){notices=notices.filter(x=>x!==n);save();render();toast('Notice deleted.')}};
+
+// ---- Extraction: server AI first (if configured), labelled rule-based fallback otherwise ----
+function vet(d){if(!d||typeof d!=='object'||typeof d.title!=='string'||!d.title.trim())throw new Error('AI returned an invalid response');const w=[];
+ const o={title:d.title.slice(0,140),category:CATS.includes(d.category)?d.category:'Other',deadline:valid(d.deadline)?d.deadline:'',eventDate:valid(d.eventDate)?d.eventDate:'',description:typeof d.description==='string'?d.description:'',actions:list(d.actions),documents:list(d.documents),eligibility:typeof d.eligibility==='string'?d.eligibility:''};
+ if(d.deadline&&!o.deadline)w.push('The AI returned an invalid deadline, so it was discarded.');
+ if(!CATS.includes(d.category))w.push('Category was missing or invalid and was set to Other.');
+ if(!o.deadline)w.push('No deadline identified. Set one if the notice has it.');
+ if(Array.isArray(d.uncertain))d.uncertain.slice(0,8).forEach(u=>w.push('AI is unsure: '+String(u)));
+ w.push('AI output can be wrong. Compare every field with the original text below.');return{d:o,w}}
+const MON='jan feb mar apr may jun jul aug sep oct nov dec'.split(' '),MR='(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.?';
+function findDates(t){const out=[],add=(y,mo,d,i,raw,amb)=>{const s=`${y}-${pad(mo)}-${pad(d)}`;out.push({s,i,raw,ok:valid(s),amb:!!amb})};let m;
+ const r1=/\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})\b/g,r2=new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+${MR},?\\s+(\\d{4})\\b`,'gi'),r3=new RegExp(`\\b${MR}\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})\\b`,'gi');
+ while(m=r1.exec(t))add(m[3],m[2],m[1],m.index,m[0],+m[1]<=12&&+m[2]<=12);
+ while(m=r2.exec(t))add(m[3],MON.indexOf(m[2].toLowerCase())+1,m[1],m.index,m[0]);
+ while(m=r3.exec(t))add(m[3],MON.indexOf(m[1].toLowerCase())+1,m[2],m.index,m[0]);return out}
+function rule(t){const w=[],DLK=/last date|deadline|\bdue\b|submit|submission|register|registration|apply|on or before|before|\bby\b|\bpay|payment|upload|cleared/,EVK=/exam|test|commence|begin|start|held|conduct|schedule|talk|session|workshop|seminar|fest|interview|verification|drive\b/;
+ const near=(re,s)=>{let p=-1,m;re=new RegExp(re.source,'gi');while(m=re.exec(s))p=m.index;return p};
+ const ds=findDates(t).map(x=>{const c=t.slice(Math.max(0,x.i-80),x.i).split(/[.\n]/).pop(),a=near(DLK,c),b=near(EVK,c);return{...x,k:a<0&&b<0?'?':a>b?'dl':'ev'}});
+ const dl=ds.filter(x=>x.ok&&x.k==='dl').sort((a,b)=>a.s<b.s?-1:1),ev=ds.filter(x=>x.ok&&x.k==='ev').sort((a,b)=>a.s<b.s?-1:1);
+ if(dl.length>1)w.push('Multiple deadlines found ('+dl.map(x=>x.raw).join(', ')+'). The earliest was selected. Check the others.');
+ if(!dl.length)w.push('No deadline found. A date was only used when nearby words showed it was a submission or registration date.');
+ ds.filter(x=>x.ok&&x.k==='?').forEach(x=>w.push(`The date "${x.raw}" could not be classified as a deadline or an event date, so it was not used.`));
+ ds.filter(x=>!x.ok).forEach(x=>w.push(`"${x.raw}" is not a valid calendar date and was ignored.`));
+ if(ds.some(x=>x.amb))w.push('Numeric dates were read as DD/MM/YYYY. Confirm the day and month.');
+ const lines=t.split('\n').map(s=>s.trim()).filter(Boolean),title=(lines.find(l=>l.length>=15)||lines[0]||'Untitled notice').replace(/^(subject|sub|notice|circular)\s*[:\-]\s*/i,'').slice(0,100);
+ const C=[['Scholarships',/scholar|stipend|fellowship/i],['Exams',/exam|internal|mid-?sem|viva|admit card/i],['Placements',/placement|recruit|internship/i],['Assignments',/assignment|lab (file|record)|project report/i],['Admissions',/admission|counsel+ing|enrol/i],['Events',/fest|seminar|workshop|competition|hackathon|cultural/i],['Administration',/\bfee\b|office|id card|library|hostel/i]];
+ const hit=C.find(c=>c[1].test(t));w.push(hit?'Category was guessed from keywords. Confirm it.':'No category keywords matched, so it was set to Other.');
+ const sents=t.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(Boolean);
+ const actions=sents.filter(s=>/\b(submit|register|apply|pay|report|bring|collect|upload|fill|attend|complete|verify)\b/i.test(s)).slice(0,5).map(s=>s.slice(0,160));
+ const DOCS=['marksheet','mark sheet','aadhaar','aadhar','income certificate','caste certificate','domicile certificate','bonafide certificate','bank passbook','photograph','fee receipt','id card','resume','admit card','transcript','application form'];
+ const documents=DOCS.filter(d=>t.toLowerCase().includes(d)).map(d=>d[0].toUpperCase()+d.slice(1));
+ if(!documents.length)w.push('No known document names found. This does not mean no documents are required.');
+ const el=sents.find(s=>/\b(eligible|eligibility|only for|minimum|cgpa|percentage|backlogs?)\b/i.test(s))||'';
+ if(!el)w.push('No eligibility condition detected. This does not mean there are none.');
+ w.push('Rule-based extraction is keyword matching, not AI. Verify every field.');
+ return{d:{title,category:hit?hit[0]:'Other',deadline:dl[0]?dl[0].s:'',eventDate:ev[0]?ev[0].s:'',description:t.replace(/\s+/g,' ').slice(0,240),actions,documents,eligibility:el.slice(0,300)},w}}
+async function runExtract(){const t=$('#raw').value.trim();
+ if(t.length<30)return toast('Paste a longer notice (at least 30 characters).','err');if(t.length>8000)return toast('Notice is too long (8000 characters maximum).','err');
+ const b=$('#ex');b.disabled=true;b.textContent='Extracting...';let r,mode;
+ try{const res=await fetch('/api/extract',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t}),signal:AbortSignal.timeout(25000)});
+  if(!res.ok){const j=await res.json().catch(()=>({}));throw new Error(res.status===501||res.status===404?'AI is not configured on this deployment':j.error||'AI service returned '+res.status)}
+  r=vet((await res.json()).data);mode='Extracted by AI (server-side)'}
+ catch(e){r=rule(t);r.w.unshift(`AI extraction unavailable: ${e.message}. Press Extract again to retry.`);mode='Extracted by rule-based fallback (not AI)'}
+ b.disabled=false;b.textContent='Extract details';r.d.source=t;openDlg(r.d,mode,r.w)}
+$('#ex').onclick=runExtract;$('#addM').onclick=()=>openDlg(null);
+
+// ---- Fictional samples and demo data (dates are relative to today so the demo never goes stale) ----
+const dd=(n,k)=>{const x=new Date();x.setDate(x.getDate()+n);return k===0?`${pad(x.getDate())}/${pad(x.getMonth()+1)}/${x.getFullYear()}`:k===1?x.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):x.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})};
+const SAMPLES=[()=>`NOTICE\nSubject: Submission of documents for State Scholarship 2026-27\nAll eligible students must submit the scholarship form with income certificate, marksheet and bank passbook copy at the Accounts Office on or before ${dd(6,1)}. Only students with minimum 60% marks in the last examination are eligible. Document verification will be held on ${dd(9,1)}.\n(Fictional demo notice)`,
+ ()=>`CIRCULAR\nSubject: Internal Examination Schedule, Semester 1\nInternal examinations will commence from ${dd(12,0)}. Students must collect their admit card from the department office. Pending exam fee must be paid on or before ${dd(8,0)}; defaulters will not be allowed to appear.\n(Fictional demo notice)`,
+ ()=>`Subject: Campus Placement Drive, Registration Open\nStudents interested in the placement drive must register on the placement portal and upload their resume by ${dd(3,2)}. The pre-placement talk is on ${dd(5,2)}. Eligible: final-year students with no active backlogs.\n(Fictional demo notice)`];
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{$('#raw').value=SAMPLES[b.dataset.s]();$('#raw').focus()});
+function demoSet(){const D=n=>{const x=new Date();x.setDate(x.getDate()+n);return ymd(x)};
+ return[{id:'demo-1',title:'Scholarship document submission',category:'Scholarships',deadline:D(6),eventDate:D(9),description:'Submit the scholarship form at the Accounts Office.',actions:['Submit scholarship form at the Accounts Office'],documents:['Income certificate','Marksheet','Bank passbook'],eligibility:'Minimum 60% marks in the last examination'},
+ {id:'demo-2',title:'Internal examination, Semester 1',category:'Exams',deadline:D(8),eventDate:D(12),description:'Clear pending fee and collect the admit card.',actions:['Pay pending exam fee','Collect admit card'],documents:['Admit card']},
+ {id:'demo-3',title:'Campus placement registration',category:'Placements',deadline:D(3),eventDate:D(5),description:'Register on the placement portal and upload a resume.',actions:['Register on the placement portal','Upload resume'],documents:['Resume'],eligibility:'Final-year students with no active backlogs'},
+ {id:'demo-4',title:'Lab record submission',category:'Assignments',deadline:D(-2),description:'Submit the completed lab record to the department.',actions:['Submit lab record']}].map(x=>clean({...x,source:'Fictional demo notice.',demo:true}))}
+$('#demoOn').onclick=()=>{const have=new Set(notices.map(n=>n.id));demoSet().forEach(n=>have.has(n.id)||notices.push(n));save();render();toast('Demo notices loaded. Your own notices are untouched.')};
+$('#demoOff').onclick=()=>{if(!notices.some(n=>n.demo))return toast('There are no demo notices to remove.');
+ if(confirm('Remove only the demo notices? Notices you added yourself stay.')){notices=notices.filter(n=>!n.demo);save();render();toast('Demo notices removed.')}};
+
+// ---- Filters and startup ----
+CATS.forEach(c=>{$('#cat').add(new Option(c,c));$('#f_category').add(new Option(c,c))});
+$('#q').oninput=e=>{F.q=e.target.value.trim().toLowerCase();render()};
+$('#cat').onchange=e=>{F.cat=e.target.value;render()};$('#sort').onchange=e=>{F.sort=e.target.value;render()};
+document.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>{F.st=b.dataset.st;document.querySelectorAll('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b));render()});
+notices=load();render();
+setInterval(render,60000);document.addEventListener('visibilitychange',render); // refresh statuses after midnight
+</script></body></html>
